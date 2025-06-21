@@ -4,13 +4,11 @@ import pool from '../../Models/database.js';
 
 const router = Router();
 
-// 🔐 Безопасное удаление (пример)
 router.post('/secure-delete', requireRole('Заведующий'), async (req, res) => {
     // TODO: логика удаления
     res.json({ message: 'Удалено' });
 });
 
-// 📦 Получение списка всего снаряжения
 router.get('/equipment', verifyAdmin, async (req, res) => {
     const [rows] = await pool.execute(`
         SELECT VidSn.*, TipSn.tnaim
@@ -21,7 +19,6 @@ router.get('/equipment', verifyAdmin, async (req, res) => {
     res.json(rows);
 });
 
-// ✏️ Обновление строки снаряжения
 router.patch('/equipment/:id', verifyAdmin, async (req, res) => {
     const { id } = req.params;
     const allowedFields = ['vnaim', 'kolich', 'zenaz', 'zenapr', 'sost', 'id_tip'];
@@ -48,19 +45,16 @@ router.patch('/equipment/:id', verifyAdmin, async (req, res) => {
     res.json({ message: 'Снаряжение обновлено' });
 });
 
-// 🗑 Удаление снаряжения
 router.delete('/equipment/:id', verifyAdmin, async (req, res) => {
     await pool.execute(`DELETE FROM VidSn WHERE id_vid = ?`, [req.params.id]);
     res.json({ message: 'Удалено' });
 });
 
-// 👥 Получение пользователей
 router.get('/users', verifyAdmin, async (req, res) => {
     const [users] = await pool.execute(`SELECT * FROM users ORDER BY id`);
     res.json(users);
 });
 
-// ✏️ Обновление пользователя
 router.patch('/users/:id', verifyAdmin, async (req, res) => {
     const { id } = req.params;
     const allowed = ['vk_id', 'role', 'name'];
@@ -86,13 +80,11 @@ router.patch('/users/:id', verifyAdmin, async (req, res) => {
     res.json({ message: 'Пользователь обновлён' });
 });
 
-// 🗑 Удаление пользователя
 router.delete('/users/:id', verifyAdmin, async (req, res) => {
     await pool.execute(`DELETE FROM users WHERE id = ?`, [req.params.id]);
     res.json({ message: 'Удалено' });
 });
 
-// 📄 Получение всех заявок
 router.get('/requests', verifyAdmin, async (req, res) => {
     const [rows] = await pool.execute(`
         SELECT r.*, u.name AS user_name
@@ -103,7 +95,6 @@ router.get('/requests', verifyAdmin, async (req, res) => {
     res.json(rows);
 });
 
-// 📦 Содержимое заявки
 router.get('/requests/:id/items', verifyAdmin, async (req, res) => {
     const [rows] = await pool.execute(`
         SELECT i.*, v.vnaim
@@ -114,7 +105,6 @@ router.get('/requests/:id/items', verifyAdmin, async (req, res) => {
     res.json(rows);
 });
 
-// ✏️ Обновление заявки
 router.patch('/requests/:id', verifyAdmin, async (req, res) => {
     const { fio, status, date_start, date_end } = req.body;
 
@@ -127,14 +117,12 @@ router.patch('/requests/:id', verifyAdmin, async (req, res) => {
     res.json({ message: 'Заявка обновлена' });
 });
 
-// 🗑 Удаление заявки и содержимого
 router.delete('/requests/:id', verifyAdmin, async (req, res) => {
     await pool.execute(`DELETE FROM requests WHERE id = ?`, [req.params.id]);
     await pool.execute(`DELETE FROM request_items WHERE request_id = ?`, [req.params.id]);
     res.json({ message: 'Удалена заявка и содержимое' });
 });
 
-// 🖨 Отметить печать заявки
 router.post('/requests/:id/print', verifyAdmin, async (req, res) => {
     const { id } = req.params;
 
