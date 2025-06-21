@@ -9,6 +9,7 @@ import { dirname } from 'path';
 import requestsRouter from './Routes/RequestsRoutes.js';
 import cron from 'node-cron';
 import { autoReturnOverdue } from './jobs/autoReturnJob.js';
+import adminRoutes from './routes/admin/equipment.js';
 
 
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/types', typesRoutes);
 app.use('/api/requests', requestsRouter);
+app.use('/api/admin/equipment', adminRoutes);
 
 app.use('*', (req, res) => {
     res.status(404).json({
