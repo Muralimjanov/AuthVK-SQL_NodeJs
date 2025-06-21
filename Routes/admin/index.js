@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireRole, verifyAdmin } from '../../Middleware/AuthMiddleware.js';
+import { requireRole, verifyToken, verifyAdmin } from '../../Middleware/AuthMiddleware.js';
 import pool from '../../Models/database.js';
 
 const router = Router();

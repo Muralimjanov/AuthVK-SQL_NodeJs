@@ -1,10 +1,9 @@
 import { findUserByVkId } from '../Models/UserModel.js';
 import jwt from 'jsonwebtoken';
 
-
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
-export async function requireRole(role) {
+export function requireRole(role) {
     return async (req, res, next) => {
         const { vk_user_id } = req.body;
 
@@ -42,3 +41,22 @@ export function verifyToken(req, res, next) {
     }
 }
 
+export async function verifyAdmin(req, res, next) {
+    const { vk_user_id } = req.body;
+
+    if (!vk_user_id) {
+        return res.status(401).json({ message: 'vk_user_id обязателен' });
+    }
+
+    const user = await findUserByVkId(vk_user_id);
+    if (!user) {
+        return res.status(403).json({ message: 'Пользователь не найден' });
+    }
+
+    if (user.role !== 'Заведующий') {
+        return res.status(403).json({ message: 'Только для заведующего' });
+    }
+
+    req.user = user;
+    next();
+}
