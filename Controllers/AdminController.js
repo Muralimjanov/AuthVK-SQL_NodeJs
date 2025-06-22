@@ -1,51 +1,5 @@
 import pool from '../Models/database.js';
 
-export async function secureDelete(req, res) {
-    // TODO: Реализовать логику удаления (например, удаление пользователя или снаряжения)
-    res.json({ message: 'Удалено' });
-}
-
-export async function getEquipment(req, res) {
-    const { sort = 'id_vid' } = req.query;
-    const [rows] = await pool.execute(`
-        SELECT VidSn.*, TipSn.tnaim AS category
-        FROM VidSn
-        LEFT JOIN TipSn ON VidSn.id_tip = TipSn.id_tip
-        ORDER BY ${pool.escapeId(sort)}
-    `);
-    res.json(rows);
-}
-
-export async function updateEquipment(req, res) {
-    const { id } = req.params;
-    const allowedFields = ['vnaim', 'kolich', 'zenaz', 'zenapr', 'sost', 'id_tip'];
-    const fields = [];
-    const values = [];
-
-    for (let key of allowedFields) {
-        if (key in req.body) {
-            fields.push(`${key} = ?`);
-            values.push(req.body[key]);
-        }
-    }
-
-    if (fields.length === 0) {
-        return res.status(400).json({ message: 'Нет полей для обновления' });
-    }
-
-    values.push(id);
-    await pool.execute(
-        `UPDATE VidSn SET ${fields.join(', ')} WHERE id_vid = ?`,
-        values
-    );
-    res.json({ message: 'Снаряжение обновлено' });
-}
-
-export async function deleteEquipment(req, res) {
-    await pool.execute(`DELETE FROM VidSn WHERE id_vid = ?`, [req.params.id]);
-    res.json({ message: 'Удалено' });
-}
-
 export async function getUsers(req, res) {
     const { sort = 'id_user' } = req.query;
     const [users] = await pool.execute(`SELECT * FROM Users ORDER BY ${pool.escapeId(sort)}`);
@@ -70,10 +24,7 @@ export async function updateUser(req, res) {
     }
 
     values.push(id);
-    await pool.execute(
-        `UPDATE Users SET ${fields.join(', ')} WHERE id_user = ?`,
-        values
-    );
+    await pool.execute(`UPDATE Users SET ${fields.join(', ')} WHERE id_user = ?`, values);
     res.json({ message: 'Пользователь обновлён' });
 }
 
@@ -155,4 +106,14 @@ export async function getCategories(req, res) {
     const { sort = 'id_tip' } = req.query;
     const [rows] = await pool.execute(`SELECT id_tip, tnaim FROM TipSn ORDER BY ${pool.escapeId(sort)}`);
     res.json(rows);
+}
+
+export async function getStatuses(req, res) {
+    try {
+        const [statuses] = await pool.execute('SELECT DISTINCT id_status, status_name FROM Status');
+        res.json(statuses);
+    } catch (error) {
+        console.error('Ошибка получения статусов:', error);
+        res.status(500).json({ message: 'Ошибка загрузки статусов: ' + error.message });
+    }
 }

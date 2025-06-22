@@ -1,28 +1,27 @@
 import pool from '../Models/database.js';
 
-export async function addRequest(req, res) {
-    const { user } = req;
-    const { id_vid, kolich, data_start, data_end } = req.body;
-
-    if (!user || !user.id_user) {
-        return res.status(401).json({ message: 'Пользователь не авторизован' });
-    }
-    if (!id_vid || !kolich || !data_start || !data_end) {
-        return res.status(400).json({ message: 'Отсутствуют обязательные параметры' });
-    }
-
+export async function createRequest(req, res) {
     try {
-        await pool.execute(
-            `INSERT INTO Zajav (id_user, id_vid, datas, datapo, summ) VALUES (?, ?, ?, ?, ?)`,
-            [user.id_user, id_vid, data_start, data_end, kolich]
+        const { id_user, datas, datapo, summ, id_status, id_vid } = req.body;
+        if (!id_user || !datas || !datapo || summ == null || !id_status) {
+            return res.status(400).json({ message: 'Поля id_user, datas, datapo, summ, id_status обязательны' });
+        }
+        const startDate = new Date(datas);
+        const endDate = new Date(datapo);
+        if (isNaN(startDate) || isNaN(endDate) || endDate < startDate) {
+            return res.status(400).json({ message: 'Неверный формат даты или дата окончания раньше даты начала' });
+        }
+        const [result] = await pool.execute(
+            'INSERT INTO Zajav (id_user, datas, datapo, summ, id_status, id_vid) VALUES (?, ?, ?, ?, ?, ?)',
+            [id_user, datas, datapo, summ, id_status, id_vid || null]
         );
-        const [[{ id }]] = await pool.execute(`SELECT LAST_INSERT_ID() as id`);
-        res.status(201).json({ id, message: 'Заявка создана' });
+        res.status(201).json({ message: 'Заявка создана', id_zajav: result.insertId });
     } catch (error) {
         console.error('Ошибка создания заявки:', error);
-        res.status(500).json({ message: 'Ошибка создания заявки' });
+        res.status(500).json({ message: 'Ошибка создания заявки: ' + error.message });
     }
 }
+
 export async function getRecentRequests(req, res) {
     const { user } = req;
     if (!user || !user.id_user) {
@@ -41,24 +40,35 @@ export async function getRecentRequests(req, res) {
         res.json(rows);
     } catch (error) {
         console.error('Ошибка получения заявок:', error);
-        res.status(500).json({ message: 'Ошибка получения заявок' });
+        res.status(500).json({ message: 'Ошибка получения заявок: ' + error.message });
     }
 }
-export async function updateRequest(req, res) {
-    const { id } = req.params;
-    const { kolich } = req.body;
-    const { user } = req;
 
+export async function patchRequest(req, res) {
     try {
-        const [[zayavka]] = await pool.execute(`SELECT * FROM Zajav WHERE id_zajav = ?`, [id]);
-        if (!zayavka || zayavka.id_user !== user.id_user || (zayavka.id_status !== null && zayavka.id_status !== 1)) {
-            return res.status(403).json({ message: 'Редактирование запрещено' });
+        const { id } = req.params;
+        const { id_user, datas, datapo, summ, id_status, id_vid } = req.body;
+        if (!id_user && !datas && !datapo && summ == null && !id_status && !id_vid) {
+            return res.status(400).json({ message: 'Хотя бы одно поле должно быть указано для обновления' });
         }
-        await pool.execute(`UPDATE Zajav SET summ = ? WHERE id_zajav = ?`, [kolich, id]);
+        if (datas || datapo) {
+            const startDate = datas ? new Date(datas) : new Date();
+            const endDate = datapo ? new Date(datapo) : new Date();
+            if (isNaN(startDate) || isNaN(endDate) || endDate < startDate) {
+                return res.status(400).json({ message: 'Неверный формат даты или дата окончания раньше даты начала' });
+            }
+        }
+        const [result] = await pool.execute(
+            'UPDATE Zajav SET id_user = ?, datas = ?, datapo = ?, summ = ?, id_status = ?, id_vid = ? WHERE id_zajav = ?',
+            [id_user || null, datas || null, datapo || null, summ || null, id_status || null, id_vid || null, id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Заявка не найдена' });
+        }
         res.json({ message: 'Заявка обновлена' });
     } catch (error) {
         console.error('Ошибка обновления заявки:', error);
-        res.status(500).json({ message: 'Ошибка обновления заявки' });
+        res.status(500).json({ message: 'Ошибка обновления заявки: ' + error.message });
     }
 }
 
@@ -74,6 +84,7 @@ export async function deleteRequest(req, res) {
         await pool.execute(`DELETE FROM Zajav WHERE id_zajav = ?`, [id]);
         res.json({ message: 'Заявка удалена' });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка удаления заявки' });
+        console.error('Ошибка удаления заявки:', error);
+        res.status(500).json({ message: 'Ошибка удаления заявки: ' + error.message });
     }
 }
