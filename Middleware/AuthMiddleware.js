@@ -34,29 +34,38 @@ export function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, SECRET);
-        req.user = decoded;
+        console.log('Decoded token:', decoded);
+        req.user = {
+            vk_id: decoded.id_vk,
+            id_user: decoded.id_user,
+            id_rol: decoded.id_rol
+        };
         next();
     } catch (err) {
+        console.error('Token verification error:', err);
         return res.status(403).json({ message: 'Недействительный токен' });
     }
 }
 
 export async function verifyAdmin(req, res, next) {
-    const { vk_user_id } = req.body;
+    const { user } = req;
+    console.log('User in verifyAdmin (raw):', user);
+    console.log('User.vk_id type:', typeof user.vk_id, 'value:', user.vk_id);
 
-    if (!vk_user_id) {
-        return res.status(401).json({ message: 'vk_user_id обязателен' });
+    if (!user || typeof user.vk_id === 'undefined' || user.vk_id === null) {
+        return res.status(401).json({ message: 'Пользователь не авторизован' });
     }
 
-    const user = await findUserByVkId(vk_user_id);
-    if (!user) {
+    const dbUser = await findUserByVkId(user.vk_id);
+    console.log('findUserByVkId result:', dbUser);
+    if (!dbUser) {
         return res.status(403).json({ message: 'Пользователь не найден' });
     }
 
-    if (user.role !== 'Заведующий') {
+    if (dbUser.id_rol !== 2) {
         return res.status(403).json({ message: 'Только для заведующего' });
     }
 
-    req.user = user;
+    req.user = dbUser;
     next();
 }
