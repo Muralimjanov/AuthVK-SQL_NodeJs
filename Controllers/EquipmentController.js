@@ -41,14 +41,21 @@ export async function updateEquipment(req, res) {
 export async function deleteEquipment(req, res) {
     try {
         const { id } = req.params;
+
+        const [dependentRows] = await pool.execute('SELECT COUNT(*) as count FROM DvSnar WHERE id_vid = ?', [id]);
+        if (dependentRows[0].count > 0) {
+            return res.status(400).json({ message: 'Нельзя удалить категорию: к ней привязано снаряжение.' });
+        }
+
         const [result] = await pool.execute('DELETE FROM VidSn WHERE id_vid = ?', [id]);
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Снаряжение не найдено' });
+            return res.status(404).json({ message: 'Категория не найдена' });
         }
-        res.json({ message: 'Снаряжение удалено' });
+
+        res.json({ message: 'Категория успешно удалена' });
     } catch (error) {
-        console.error('Ошибка удаления снаряжения:', error);
-        res.status(500).json({ message: 'Ошибка удаления снаряжения: ' + error.message });
+        console.error('Ошибка удаления категории:', error);
+        res.status(500).json({ message: 'Ошибка удаления категории: ' + error.message });
     }
 }
 
