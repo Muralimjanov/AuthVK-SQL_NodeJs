@@ -55,8 +55,8 @@ app.use('*', (req, res) => {
 });
 
 cron.schedule('0 2 * * *', () => {
-  console.log('Ежедневная проверка просроченных заявок...');
-  autoReturnOverdue();
+    console.log('Ежедневная проверка просроченных заявок...');
+    autoReturnOverdue();
 });
 
 app.listen(PORT, () => {
