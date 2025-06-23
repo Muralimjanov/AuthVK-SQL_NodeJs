@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.get('/with-availability', verifyToken, verifyAdmin, getEquipmentWithAvailability);
-router.get('/equipment', getAllEquipment);
+router.get('/equipment', verifyToken, verifyAdmin, getAllEquipment);
 router.get('/', verifyToken, verifyAdmin, getEquipmentList);
 router.get('/:id', verifyToken, verifyAdmin, getEquipmentById);
 router.post('/', verifyToken, verifyAdmin, createEquipment);
@@ -21,5 +21,3 @@ router.patch('/:id', verifyToken, verifyAdmin, updateEquipment);
 router.delete('/:id', verifyToken, verifyAdmin, deleteEquipment);
 
 export default router;
-
-// verifyToken, verifyAdmin,
