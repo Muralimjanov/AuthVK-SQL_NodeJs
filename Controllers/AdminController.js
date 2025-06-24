@@ -1,5 +1,31 @@
 import pool from '../Models/database.js';
 
+
+export async function addUsers(req, res) {
+    const { id_vk, fio, id_rol } = req.body;
+
+    if (!id_vk || !fio || id_rol === undefined) {
+        return res.status(400).json({ message: 'Отсутствуют обязательные поля: id_vk, fio или id_rol' });
+    }
+
+    try {
+        const [existingUsers] = await pool.execute('SELECT id_user FROM Users WHERE id_vk = ?', [id_vk]);
+        if (existingUsers.length > 0) {
+            return res.status(400).json({ message: 'Пользователь с таким id_vk уже существует' });
+        }
+
+        const [result] = await pool.execute(
+            'INSERT INTO Users (id_vk, fio, id_rol) VALUES (?, ?, ?)',
+            [id_vk, fio, id_rol]
+        );
+
+        res.status(201).json({ message: 'Пользователь добавлен', id_user: result.insertId });
+    } catch (error) {
+        console.error('Ошибка добавления пользователя:', error);
+        res.status(500).json({ message: 'Ошибка добавления пользователя: ' + error.message });
+    }
+}
+
 export async function getUsers(req, res) {
     const { sort = 'id_user' } = req.query;
     const [users] = await pool.execute(`SELECT * FROM Users ORDER BY ${pool.escapeId(sort)}`);

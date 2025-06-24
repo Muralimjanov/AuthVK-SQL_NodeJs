@@ -10,6 +10,11 @@ import requestsRouter from './Routes/RequestsRoutes.js';
 import cron from 'node-cron';
 import { autoReturnOverdue } from './jobs/autoReturnJob.js';
 import adminRoutes from './Routes/admin/index.js';
+import './Models/database.js';
+import equipmentRoutes from './Routes/EquipmentRoutes.js';
+import typesRoutes from './Routes/TypesRoutes.js';
+import authRoutes from './Routes/AuthRoutes.js';
+import printRoutes from './Routes/PrintRoutes.js';
 
 
 dotenv.config();
@@ -25,12 +30,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-import './Models/database.js';
-
-import equipmentRoutes from './Routes/EquipmentRoutes.js';
-import typesRoutes from './Routes/TypesRoutes.js';
-import authRoutes from './Routes/AuthRoutes.js';
-
 app.get('/', (req, res) => {
     res.json({
         message: 'VK Equipment API работает',
@@ -45,6 +44,7 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/types', typesRoutes);
 app.use('/api/requests', requestsRouter);
 app.use('/api/admin', adminRoutes);
+app.use('/api/print', printRoutes);
 
 app.use('*', (req, res) => {
     res.status(404).json({

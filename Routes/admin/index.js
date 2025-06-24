@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireRole, verifyToken, verifyAdmin } from '../../Middleware/AuthMiddleware.js';
 import {
+    addUsers,
     getUsers,
     updateUser,
     deleteUser,
@@ -16,6 +17,7 @@ import {
 
 const router = Router();
 
+router.post('/users', verifyToken, verifyAdmin, addUsers);
 router.get('/users', verifyToken, verifyAdmin, getUsers);
 router.patch('/users/:id', verifyToken, verifyAdmin, updateUser);
 router.delete('/users/:id', verifyToken, verifyAdmin, deleteUser);
