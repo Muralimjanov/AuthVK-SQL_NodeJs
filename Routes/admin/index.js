@@ -12,7 +12,8 @@ import {
     deleteRequest,
     printRequest,
     getCategories,
-    getStatuses
+    getStatuses,
+    getUserRequests
 } from '../../Controllers/AdminController.js';
 
 const router = Router();
@@ -29,5 +30,7 @@ router.delete('/requests/:id', verifyToken, verifyAdmin, deleteRequest);
 router.post('/requests/:id/print', verifyToken, verifyAdmin, printRequest);
 router.get('/categories', verifyToken, verifyAdmin, getCategories);
 router.get('/statuses', verifyToken, verifyAdmin, getStatuses);
+router.get('/admin/requests/user/:userId', verifyToken, verifyAdmin, getUserRequests);
+
 
 export default router;

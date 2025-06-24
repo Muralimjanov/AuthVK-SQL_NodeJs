@@ -41,7 +41,7 @@ export async function vkAuth(req, res) {
     return res.json({
         message: 'Авторизация успешна',
         user,
-        tabs,
-        token
+        token,
+        tabs
     });
 }

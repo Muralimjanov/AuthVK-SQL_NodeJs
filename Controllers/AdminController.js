@@ -143,3 +143,24 @@ export async function getStatuses(req, res) {
         res.status(500).json({ message: 'Ошибка загрузки статусов: ' + error.message });
     }
 }
+
+export async function getUserRequests(req, res) {
+    const { userId } = req.params;
+    if (!userId) {
+        return res.status(400).json({ message: 'Не задан userId' });
+    }
+    try {
+        const [rows] = await pool.execute(
+            `SELECT z.*, v.vnaim 
+            FROM Zajav z 
+            JOIN VidSn v ON v.id_vid = z.id_vid 
+            WHERE z.id_user = ? 
+            ORDER BY z.id_zajav DESC`,
+            [userId]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('Ошибка получения заявок пользователя:', error);
+        res.status(500).json({ message: 'Ошибка получения заявок пользователя: ' + error.message });
+    }
+}
